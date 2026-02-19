@@ -1,6 +1,9 @@
 'use client';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useAuth } from '@/app/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 const navLinks = [
   { label: 'Features', href: '#features' },
@@ -12,6 +15,13 @@ export function NavBar() {
   const { scrollY } = useScroll();
   const borderOpacity = useTransform(scrollY, [0, 80], [0, 1]);
   const bgOpacity = useTransform(scrollY, [0, 80], [0, 0.85]);
+  const { user, loading, signOut } = useAuth();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/');
+  };
 
   return (
     <motion.nav
@@ -45,7 +55,7 @@ export function NavBar() {
               height={42}
               className="object-contain invert"
             />
-            <span className="text-white font-semibold text-sm tracking-widest uppercase">
+            <span className="text-white font-semibold text-sm tracking-widest uppercase" style={{ fontFamily: 'var(--font-jua)' }}>
               uksnote
             </span>
           </motion.a>
@@ -66,27 +76,72 @@ export function NavBar() {
                 transition={{ delay: 0.15 + index * 0.08 }}
                 whileHover={{ color: '#ffffff' }}
                 className="text-white/50 text-sm tracking-widest uppercase transition-colors hover:text-white"
+                style={{ fontFamily: 'var(--font-jua)' }}
               >
                 {link.label}
               </motion.a>
             ))}
           </motion.div>
 
-          {/* Right: Get Started Button */}
+          {/* Right: Auth Area */}
           <motion.div
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex items-center gap-4"
+            className="flex items-center gap-3"
           >
-            <motion.a
-              href="/auth"
-              whileHover={{ scale: 1.04, backgroundColor: '#ffffff', color: '#000000' }}
-              whileTap={{ scale: 0.96 }}
-              className="hidden sm:inline-flex items-center px-5 py-2 bg-white text-black text-xs font-semibold tracking-widest uppercase transition-colors"
-            >
-              Log In
-            </motion.a>
+            {!loading && (
+              user ? (
+                /* 로그인 상태 */
+                <div className="hidden sm:flex items-center gap-3">
+                  <motion.a
+                    href="/dashboard"
+                    whileHover={{ color: '#ffffff' }}
+                    className="text-white/50 text-xs tracking-widest uppercase transition-colors"
+                    style={{ fontFamily: 'var(--font-jua)' }}
+                  >
+                    Dashboard
+                  </motion.a>
+                  {/* Avatar */}
+                  {user.user_metadata?.avatar_url ? (
+                    <Link href="/dashboard">
+                      <Image
+                        src={user.user_metadata.avatar_url}
+                        alt="avatar"
+                        width={30}
+                        height={30}
+                        className="rounded-full ring-1 ring-white/20 hover:ring-white/50 transition-all cursor-pointer"
+                      />
+                    </Link>
+                  ) : (
+                    <Link href="/dashboard">
+                      <div className="w-7 h-7 bg-white/10 hover:bg-white/20 flex items-center justify-center text-[11px] text-white ring-1 ring-white/20 transition-all cursor-pointer">
+                        {(user.user_metadata?.full_name?.[0] ?? user.email?.[0] ?? 'U').toUpperCase()}
+                      </div>
+                    </Link>
+                  )}
+                  <motion.button
+                    onClick={handleSignOut}
+                    whileHover={{ color: '#ffffff' }}
+                    className="text-white/30 text-xs tracking-widest uppercase transition-colors"
+                    style={{ fontFamily: 'var(--font-jua)' }}
+                  >
+                    Sign Out
+                  </motion.button>
+                </div>
+              ) : (
+                /* 비로그인 상태 */
+                <motion.a
+                  href="/auth"
+                  whileHover={{ scale: 1.04, backgroundColor: '#ffffff', color: '#000000' }}
+                  whileTap={{ scale: 0.96 }}
+                  className="hidden sm:inline-flex items-center px-5 py-2 bg-white text-black text-xs font-semibold tracking-widest uppercase transition-colors"
+                  style={{ fontFamily: 'var(--font-jua)' }}
+                >
+                  Log In
+                </motion.a>
+              )
+            )}
 
             {/* Mobile Menu Button */}
             <motion.button
