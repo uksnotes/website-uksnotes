@@ -59,7 +59,7 @@ export function DashboardNavBar() {
             className="text-white text-xs tracking-widest uppercase"
             style={{ fontFamily: 'var(--font-jua)' }}
           >
-            uksnote
+            LunchChat.
           </span>
         </motion.div>
       </Link>

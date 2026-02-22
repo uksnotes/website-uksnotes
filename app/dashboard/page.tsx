@@ -1,20 +1,57 @@
 'use client';
 import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { DashboardNavBar } from '@/app/components/dashboard/NavBar';
 import { PromptArea } from '@/app/components/dashboard/PromptArea';
+import { HistorySidebar, HistoryItem } from '@/app/components/dashboard/HistorySidebar';
+import { createClient } from '@/app/lib/supabase/client';
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [history, setHistory] = useState<HistoryItem[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/auth');
     }
   }, [user, loading, router]);
+
+  // 로그인 후 Supabase에서 과거 생성 기록 로드
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    supabase
+      .from('chats')
+      .select('id, prompt, image_url, response_text, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50)
+      .then(({ data }) => {
+        if (data) {
+          setHistory(
+            data.map((row) => ({
+              id: row.id as string,
+              imageUrl: row.image_url as string,
+              text: (row.response_text as string) ?? '',
+              prompt: (row.prompt as string) ?? '',
+            }))
+          );
+        }
+      });
+  }, [user]);
+
+  const handleResult = (imageUrl: string, text: string, prompt: string) => {
+    const newItem: HistoryItem = {
+      id: Date.now().toString(),
+      imageUrl,
+      text,
+      prompt,
+    };
+    setHistory((prev) => [newItem, ...prev]);
+  };
 
   if (loading || !user) {
     return (
@@ -40,10 +77,18 @@ export default function DashboardPage() {
       {/* 플로팅 NavBar */}
       <DashboardNavBar />
 
-      {/* 메인: 화면 중앙 정렬 */}
-      <main className="relative z-10 min-h-screen flex items-center justify-center px-4">
-        <PromptArea />
-      </main>
+      {/* 레이아웃: 사이드바 + 메인 */}
+      <div className="relative z-10 flex min-h-screen">
+
+        {/* 왼쪽 히스토리 사이드바 */}
+        <HistorySidebar history={history} />
+
+        {/* 메인 콘텐츠 */}
+        <main className="flex-1 flex items-center justify-center px-6 py-12 min-h-screen">
+          <PromptArea onResult={handleResult} />
+        </main>
+
+      </div>
     </div>
   );
 }

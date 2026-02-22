@@ -6,7 +6,7 @@ import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
 const navLinks = [
-  { label: 'Features', href: '#features' },
+  { label: 'How It Works', href: '#features' },
   { label: 'Pricing', href: '#pricing' },
   { label: 'Contact', href: '#contact' },
 ];
@@ -56,7 +56,7 @@ export function NavBar() {
               className="object-contain invert"
             />
             <span className="text-white font-semibold text-sm tracking-widest uppercase" style={{ fontFamily: 'var(--font-jua)' }}>
-              uksnote
+              LunchChat.
             </span>
           </motion.a>
 
